@@ -30,15 +30,19 @@ namespace MastodonImageBot
                 JArray a = JArray.Parse(content);
                 JObject obj = JObject.Parse(a[0].ToString());
                 string fPath = $"cache\\{obj["md5"]}.{obj["file_ext"]}";
-                Console.WriteLine($"Debug: {obj["file_url"]}");
-                byte[] fContent = await http.GetByteArrayAsync((string)obj["file_url"]);
+                string fuck = (string)obj["file_url"];
+                if (!fuck.StartsWith("http"))
+                {
+                    fuck = "https://danbooru.donmai.us" + fuck;
+                }
+                byte[] fContent = await http.GetByteArrayAsync(fuck);
                 File.WriteAllBytes(fPath, fContent);
                 using (var fs = new FileStream(fPath, FileMode.Open, FileAccess.Read))
                 {
                     var attach = await tokens.Media.PostAsync(file => fs);
                     await tokens.Statuses.PostAsync(status => $"https://danbooru.donmai.us/posts/{obj["id"]}", media_ids => new System.Collections.Generic.List<long>() { attach.Id });
                 }
-                Console.WriteLine($"Posted danbooru post {obj["id"]}. URL: {obj["file_url"]}");
+                Console.WriteLine($"Posted danbooru post {obj["id"]}. MD5: {obj["md5"]}");
                 await Task.Delay(Config.PostInterval * 60000);
             }
         }
