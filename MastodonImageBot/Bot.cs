@@ -5,6 +5,8 @@ using System.Net.Http;
 using System.IO;
 using System.Threading.Tasks;
 
+#pragma warning disable CS0168
+
 namespace MastodonImageBot
 {
     public static class Bot
@@ -35,14 +37,21 @@ namespace MastodonImageBot
                 {
                     fuck = "https://danbooru.donmai.us" + fuck;
                 }
-                byte[] fContent = await http.GetByteArrayAsync(fuck);
-                File.WriteAllBytes(fPath, fContent);
-                using (var fs = new FileStream(fPath, FileMode.Open, FileAccess.Read))
+                try
                 {
-                    var attach = await tokens.Media.PostAsync(file => fs);
-                    await tokens.Statuses.PostAsync(status => $"https://danbooru.donmai.us/posts/{obj["id"]}", media_ids => new System.Collections.Generic.List<long>() { attach.Id });
+                    byte[] fContent = await http.GetByteArrayAsync(fuck);
+                    File.WriteAllBytes(fPath, fContent);
+                    using (var fs = new FileStream(fPath, FileMode.Open, FileAccess.Read))
+                    {
+                        var attach = await tokens.Media.PostAsync(file => fs);
+                        await tokens.Statuses.PostAsync(status => $"https://danbooru.donmai.us/posts/{obj["id"]}", media_ids => new System.Collections.Generic.List<long>() { attach.Id });
+                    }
+                    Console.WriteLine($"Posted danbooru post {obj["id"]}. MD5: {obj["md5"]}");
                 }
-                Console.WriteLine($"Posted danbooru post {obj["id"]}. MD5: {obj["md5"]}");
+                catch (Exception e)
+                {
+                    Console.WriteLine("Something fucked up. Oh well, maybe next time.");
+                }
                 await Task.Delay(Config.PostInterval * 60000);
             }
         }
