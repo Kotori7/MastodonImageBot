@@ -3,6 +3,8 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.IO;
 
+#pragma warning disable CS0252
+
 namespace MastodonImageBot
 {
     public class Program
@@ -11,16 +13,16 @@ namespace MastodonImageBot
         {
             if (!Directory.Exists("cache"))
                 Directory.CreateDirectory("cache");
-            //if (!Directory.Exists("config") || Directory.GetFiles("config").Length == 0 || args[0] == "/new")
-            //{
-            //    Console.WriteLine("Running initial setup wizard...");
-            //    Initial();
-            //}
-            //if (Directory.GetFiles("config").Length >= 2 || args[0] == null)
-            //{
-            //    Console.WriteLine("I've detected more than two bot conifgurations, please specify one as an argument.");
-            //    Environment.Exit(0);
-            //}
+            if (!Directory.Exists("config") || Directory.GetFiles("config").Length == 0 || args.GetValue(0) == "/new")
+            {
+                Console.WriteLine("Running initial setup wizard...");
+                Initial();
+            }
+            if (Directory.GetFiles("config").Length >= 2 || args.Length == 0)
+            {
+                Console.WriteLine("I've detected more than two bot conifgurations, please specify one as an argument.");
+                Environment.Exit(0);
+            }
             BotConfig conf = JsonConvert.DeserializeObject<BotConfig>(File.ReadAllText(/*args[0] ?? */Directory.GetFiles("config")[0]));
             Bot.Run(conf);
             System.Threading.Tasks.Task.Delay(-1).GetAwaiter().GetResult();
